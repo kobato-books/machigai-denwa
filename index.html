@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>間違い電話</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: #0a0a0a;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      user-select: none;
+      overflow: hidden;
+    }
+    #title-screen {
+      text-align: center;
+      animation: fadeIn 1.5s ease;
+    }
+    #title-screen h1 {
+      font-size: 2.4rem;
+      color: #ff2222;
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 20px #ff000066, 0 0 40px #ff000033;
+      margin-bottom: 12px;
+      animation: flicker 3s infinite;
+    }
+    #title-screen .warning {
+      font-size: 0.95rem;
+      color: #aa4444;
+      margin: 20px 0;
+      line-height: 1.7;
+    }
+    #title-screen .small {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 30px;
+    }
+    #start-title-btn {
+      margin-top: 40px;
+      padding: 14px 40px;
+      font-size: 1.1rem;
+      border: 2px solid #ff3333;
+      border-radius: 4px;
+      background: transparent;
+      color: #ff4444;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      letter-spacing: 0.1em;
+    }
+    #start-title-btn:hover {
+      background: #ff2222;
+      color: #111;
+      box-shadow: 0 0 20px #ff000066;
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      92% { opacity: 1; }
+      93% { opacity: 0.6; }
+      94% { opacity: 1; }
+      96% { opacity: 0.4; }
+      97% { opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #game-screen {
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      display: none;
+    }
+    h1.game-title {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+      color: #ff5555;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 30px;
+    }
+    #number-display {
+      font-size: 2.1rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      font-family: "Courier New", monospace;
+      color: #4af;
+      margin: 30px 0;
+      min-height: 50px;
+      transition: opacity 0.3s;
+    }
+    #message {
+      font-size: 1.1rem;
+      min-height: 60px;
+      margin: 20px 0;
+      line-height: 1.5;
+      color: #ccc;
+      white-space: pre-line;
+    }
+    #message.angry {
+      color: #ff4444;
+      font-weight: bold;
+      animation: shake 0.4s;
+    }
+    #message.correct {
+      color: #777;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      font-size: 1.3rem;
+      text-align: center;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #fff;
+      outline: none;
+      font-family: "Courier New", monospace;
+      letter-spacing: 0.1em;
+    }
+    input[type="text"]:focus {
+      border-color: #4af;
+    }
+    button.game-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 14px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #ff4444;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.game-btn:active {
+      background: #cc3333;
+    }
+    #stats {
+      margin-top: 30px;
+      font-size: 0.85rem;
+      color: #555;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- タイトル画面 -->
+  <div id="title-screen">
+    <h1>間違い電話</h1>
+    <div class="warning">
+      電話番号を3秒で覚えろ。<br>
+      間違えたら怒られる。<br>
+      正解しても何も起きない。<br><br>
+      これが全てです。<br>
+      他に何もありません。
+    </div>
+    <button id="start-title-btn">それでも始める</button>
+    <div class="small">※クリア条件はありません。楽しめる保証もありません。</div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game-screen">
+    <h1 class="game-title">間違い電話</h1>
+    <div class="subtitle">絶対に繋がらない電話をかけるゲーム</div>
+
+    <div id="number-display"></div>
+    <div id="message">準備中...</div>
+
+    <div id="input-area" class="hidden">
+      <input type="text" id="phone-input" placeholder="000-xxxx-xxxx" maxlength="14" autocomplete="off" inputmode="numeric">
+      <button class="game-btn" id="call-btn">発信</button>
+    </div>
+
+    <button class="game-btn" id="start-btn">始める</button>
+
+    <div id="stats">
+      正解: <span id="correct-count">0</span>　
+      間違い: <span id="wrong-count">0</span>
+    </div>
+  </div>
+
+  <script>
+    const titleScreen = document.getElementById('title-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const startTitleBtn = document.getElementById('start-title-btn');
+    const numberDisplay = document.getElementById('number-display');
+    const message = document.getElementById('message');
+    const inputArea = document.getElementById('input-area');
+    const phoneInput = document.getElementById('phone-input');
+    const callBtn = document.getElementById('call-btn');
+    const startBtn = document.getElementById('start-btn');
+    const correctCountEl = document.getElementById('correct-count');
+    const wrongCountEl = document.getElementById('wrong-count');
+
+    let currentNumber = '';
+    let correctCount = 0;
+    let wrongCount = 0;
+    let angerLevel = 0;
+
+    const angryMessages = [
+      "違います。",
+      "全然違う。",
+      "いい加減にしてくれます？",
+      "3秒しか出てないとはいえ、流石に覚えてほしいんですが。",
+      "もう一回ちゃんと見て。",
+      "あなたの記憶力、大丈夫？",
+      "適当に打つな。",
+      "いい加減にしろ。",
+      "もう二度と電話するな。",
+      "あなたは電話をかける資格がありません。",
+      "……はぁ。",
+      "疲れた。もういいよ。"
+    ];
+
+    function generateNumber() {
+      const part1 = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      const part2 = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      return `000-${part1}-${part2}`;
+    }
+
+    function normalize(num) {
+      return num.replace(/[^0-9]/g, '');
+    }
+
+    function startRound() {
+      currentNumber = generateNumber();
+      numberDisplay.textContent = currentNumber;
+      numberDisplay.style.opacity = '1';
+      message.textContent = 'よく見て。3秒だけ出す。';
+      message.className = '';
+      inputArea.classList.add('hidden');
+      startBtn.classList.add('hidden');
+      phoneInput.value = '';
+
+      setTimeout(() => {
+        numberDisplay.style.opacity = '0';
+        setTimeout(() => {
+          numberDisplay.textContent = '';
+          message.textContent = '番号は消えた。入力して。';
+          inputArea.classList.remove('hidden');
+          phoneInput.focus();
+        }, 300);
+      }, 3000);
+    }
+
+    function handleCall() {
+      const input = phoneInput.value.trim();
+      if (!input) return;
+
+      const isCorrect = normalize(input) === normalize(currentNumber);
+
+      if (isCorrect) {
+        correctCount++;
+        correctCountEl.textContent = correctCount;
+        angerLevel = Math.max(0, angerLevel - 1);
+        message.textContent = '正解です。\n……特に何も起きません。';
+        message.className = 'correct';
+        inputArea.classList.add('hidden');
+        setTimeout(() => {
+          startRound();
+        }, 1800);
+      } else {
+        wrongCount++;
+        wrongCountEl.textContent = wrongCount;
+        angerLevel = Math.min(angerLevel + 1, angryMessages.length - 1);
+        message.textContent = angryMessages[angerLevel];
+        message.className = 'angry';
+        phoneInput.value = '';
+        phoneInput.focus();
+
+        if (angerLevel >= angryMessages.length - 1) {
+          setTimeout(() => {
+            message.textContent = '強制終了します。\nあなたは電話をかける資格がありません。';
+            inputArea.classList.add('hidden');
+            startBtn.textContent = 'もう一回最初から';
+            startBtn.classList.remove('hidden');
+            angerLevel = 0;
+          }, 2000);
+        }
+      }
+    }
+
+    startTitleBtn.addEventListener('click', () => {
+      titleScreen.style.display = 'none';
+      gameScreen.style.display = 'block';
+      startRound();
+    });
+
+    startBtn.addEventListener('click', () => {
+      angerLevel = 0;
+      startRound();
+    });
+
+    callBtn.addEventListener('click', handleCall);
+    phoneInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleCall();
+    });
+  </script>
+</body>
+</html>
